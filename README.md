@@ -1,7 +1,7 @@
 # cmd
 
 ```sh
-go install github.com/bvanvugt/cmd
+go install github.com/bvanvugt/cmd@latest
 ```
 
 
