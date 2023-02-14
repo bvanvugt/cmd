@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 	// External deps
@@ -36,7 +37,12 @@ func (cc *CmdCommand) Run(_ *cobra.Command, args []string) {
 
 	startTime := time.Now()
 
-	cmd := exec.CommandContext(ctx, "bash", "-c", fmt.Sprintf("%s %s", devContainerCmd, cc.Shell))
+	shellString := strings.Replace(cc.Shell, "$@", strings.Join(args, " "), 1)
+	if len(devContainerCmd) > 0 {
+		shellString = fmt.Sprintf("%s %s", devContainerCmd, shellString)
+	}
+
+	cmd := exec.CommandContext(ctx, "bash", "-c", shellString)
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
