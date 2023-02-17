@@ -1,0 +1,7 @@
+devcontainer:
+  name: cmd.local
+  dir: /workspaces/cmd
+env:
+  EXAMPLE: value
+commands:
+  test: echo test, args = $@

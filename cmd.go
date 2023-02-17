@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"embed"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -17,16 +18,8 @@ import (
 	"github.com/spf13/viper"
 )
 
-var initFile string = `# .cmd.yaml
-devcontainer:
-  name: cmd.local
-  dir: /workspaces/cmd
-env:
-  EXAMPLE: value
-commands:
-  test:
-    shell: echo test, args = $@
-`
+//go:embed files/*
+var fs embed.FS
 
 var devContainerCmd string
 
@@ -36,7 +29,7 @@ type CmdConfig struct {
 	DevContainerName string
 	DevContainerDir  string
 	Env              map[string]string
-	Commands         map[string]*CmdCommand
+	Commands         []*CmdCommand
 }
 
 type CmdCommand struct {
@@ -84,6 +77,25 @@ func init() {
 	systemErr = color.New(color.FgHiRed)
 }
 
+func writeFile(srcPath string, dstPath string) {
+	if _, err := os.Stat(dstPath); err == nil {
+		systemErr.Printf("File %s already exists\n", dstPath)
+		return
+	}
+
+	srcData, err := fs.ReadFile(srcPath)
+	if err != nil {
+		panic(err)
+	}
+
+	err = ioutil.WriteFile(dstPath, srcData, 0644)
+	if err != nil {
+		panic(err)
+	}
+
+	systemOut.Printf("Created file: %s\n", dstPath)
+}
+
 func main() {
 
 	config := loadConfig()
@@ -95,17 +107,7 @@ func main() {
 	initCmd := &cobra.Command{
 		Use: "init",
 		Run: func(cmd *cobra.Command, args []string) {
-			configFilePath := ".cmd.yaml"
-			if _, err := os.Stat(configFilePath); err == nil {
-				systemErr.Printf("Config file already exists: %s\n", configFilePath)
-				return
-			}
-
-			err := ioutil.WriteFile(configFilePath, []byte(initFile), 0644)
-			if err != nil {
-				panic(err)
-			}
-			systemOut.Printf("Created example cmd file at %s\n", configFilePath)
+			writeFile("files/.cmd.yaml", ".cmd.yaml")
 		},
 	}
 
@@ -119,13 +121,13 @@ func main() {
 		},
 	}
 
-	for n, c := range config.Commands {
+	for _, c := range config.Commands {
 		devCmd.AddCommand(&cobra.Command{
-			Use: n,
+			Use: c.Name,
 			Run: c.Run,
 		})
 		rootCmd.AddCommand(&cobra.Command{
-			Use: n,
+			Use: c.Name,
 			Run: c.Run,
 		})
 	}
@@ -137,9 +139,7 @@ func main() {
 }
 
 func loadConfig() *CmdConfig {
-	c := CmdConfig{
-		Commands: make(map[string]*CmdCommand),
-	}
+	c := CmdConfig{}
 
 	viper.AddConfigPath(".")
 	viper.SetConfigType("yaml")
@@ -149,7 +149,7 @@ func loadConfig() *CmdConfig {
 
 	var x viper.ConfigFileNotFoundError
 	if errors.As(err, &x) {
-		systemErr.Printf("Config file not found: .cmd.yaml\n")
+		// systemErr.Printf("Config file not found: .cmd.yaml\n")
 		return &c
 	}
 	if err != nil {
@@ -160,15 +160,12 @@ func loadConfig() *CmdConfig {
 	c.DevContainerDir = viper.GetString("devcontainer.dir")
 	c.Env = viper.GetStringMapString("env")
 
-	err = viper.UnmarshalKey("commands", &c.Commands)
-	if err != nil {
-		panic(err)
-	}
-
-	for name, command := range c.Commands {
-		if command.Name == "" {
-			command.Name = name
-		}
+	commands := viper.GetStringMapString("commands")
+	for name, command := range commands {
+		c.Commands = append(c.Commands, &CmdCommand{
+			Name:  name,
+			Shell: command,
+		})
 	}
 
 	return &c
