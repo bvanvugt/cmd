@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -15,6 +16,17 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
+
+var initFile string = `# .cmd.yaml
+devcontainer:
+  name: cmd.local
+  dir: /workspaces/cmd
+env:
+  EXAMPLE: value
+commands:
+  test:
+    shell: echo test, args = $@
+`
 
 var devContainerCmd string
 
@@ -80,6 +92,23 @@ func main() {
 		Use: "cmd",
 	}
 
+	initCmd := &cobra.Command{
+		Use: "init",
+		Run: func(cmd *cobra.Command, args []string) {
+			configFilePath := ".cmd.yaml"
+			if _, err := os.Stat(configFilePath); err == nil {
+				systemErr.Printf("Config file already exists: %s\n", configFilePath)
+				return
+			}
+
+			err := ioutil.WriteFile(configFilePath, []byte(initFile), 0644)
+			if err != nil {
+				panic(err)
+			}
+			systemOut.Printf("Created example cmd file at %s\n", configFilePath)
+		},
+	}
+
 	devCmd := &cobra.Command{
 		Use: "dev",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
@@ -102,11 +131,16 @@ func main() {
 	}
 
 	rootCmd.AddCommand(devCmd)
+	rootCmd.AddCommand(initCmd)
 
 	_ = rootCmd.Execute()
 }
 
 func loadConfig() *CmdConfig {
+	c := CmdConfig{
+		Commands: make(map[string]*CmdCommand),
+	}
+
 	viper.AddConfigPath(".")
 	viper.SetConfigType("yaml")
 	viper.SetConfigName(".cmd")
@@ -115,19 +149,16 @@ func loadConfig() *CmdConfig {
 
 	var x viper.ConfigFileNotFoundError
 	if errors.As(err, &x) {
-		systemErr.Printf("Config file not found: .cmd.yaml")
-		os.Exit(1)
+		systemErr.Printf("Config file not found: .cmd.yaml\n")
+		return &c
 	}
 	if err != nil {
 		panic(err)
 	}
 
-	c := CmdConfig{
-		DevContainerName: viper.GetString("devcontainer.name"),
-		DevContainerDir:  viper.GetString("devcontainer.dir"),
-		Env:              viper.GetStringMapString("env"),
-		Commands:         make(map[string]*CmdCommand),
-	}
+	c.DevContainerName = viper.GetString("devcontainer.name")
+	c.DevContainerDir = viper.GetString("devcontainer.dir")
+	c.Env = viper.GetStringMapString("env")
 
 	err = viper.UnmarshalKey("commands", &c.Commands)
 	if err != nil {
