@@ -5,8 +5,9 @@
         "--rm",
         // "--name=x.y.local"
         // "--network=x.y.local",
-        // "--env-file=.devcontainer/devcontainer.env",
+        "--env-file=.devcontainer/devcontainer.env"
     ],
+    "postCreateCommand": "./.devcontainer/devcontainer.sh",
     "forwardPorts": [],
     "shutdownAction": "none",
     "customizations": {
@@ -17,6 +18,7 @@
             "settings": {
                 "editor.formatOnSave": true,
                 "go.formatTool": "gofmt",
+                "go.lintTool": "golangci-lint",
                 "go.testOnSave": true,
                 "go.coverOnSave": true,
                 "go.coverageOptions": "showUncoveredCodeOnly"

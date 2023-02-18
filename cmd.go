@@ -107,14 +107,18 @@ func main() {
 	initCmd := &cobra.Command{
 		Use: "init",
 		Run: func(cmd *cobra.Command, args []string) {
-			writeFile("files/.cmd.yaml", ".cmd.yaml")
+			_ = os.Mkdir(".devcontainer", os.ModePerm)
+			writeFile("files/cmd.yaml", ".devcontainer/cmd.yaml")
 		},
 	}
 	initCmd.AddCommand(&cobra.Command{
 		Use: "go",
 		Run: func(cmd *cobra.Command, args []string) {
 			_ = os.Mkdir(".devcontainer", os.ModePerm)
-			writeFile("files/devcontainer.go.json", ".devcontainer/devcontainer.json")
+			writeFile("files/go/cmd.yaml", ".devcontainer/cmd.yaml")
+			writeFile("files/go/devcontainer.json", ".devcontainer/devcontainer.json")
+			writeFile("files/go/devcontainer.env", ".devcontainer/devcontainer.env")
+			writeFile("files/go/devcontainer.sh", ".devcontainer/devcontainer.sh")
 		},
 	})
 
@@ -148,9 +152,9 @@ func main() {
 func loadConfig() *CmdConfig {
 	c := CmdConfig{}
 
-	viper.AddConfigPath(".")
+	viper.AddConfigPath(".devcontainer")
+	viper.SetConfigName("cmd")
 	viper.SetConfigType("yaml")
-	viper.SetConfigName(".cmd")
 
 	err := viper.ReadInConfig()
 

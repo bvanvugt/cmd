@@ -1,0 +1,10 @@
+devcontainer:
+  # name: x.local
+  # dir: /workspaces/x
+env:
+  EXAMPLE: value
+commands:
+  shell:
+    bash
+  test:
+    golangci-lint run -v ./... && go test ./...

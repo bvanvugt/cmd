@@ -1,6 +1,6 @@
 devcontainer:
-  name: cmd.local
-  dir: /workspaces/cmd
+  name: x.local
+  dir: /workspaces/x
 env:
   EXAMPLE: value
 commands:
