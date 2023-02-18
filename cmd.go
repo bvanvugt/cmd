@@ -71,7 +71,11 @@ func (cc *CmdCommand) Run(_ *cobra.Command, args []string) {
 	}()
 
 	systemOut.Printf("Running [%s] at %s\n", cc.Name, startTime.Format(time.Kitchen))
-	cmd.Run()
+
+	err := cmd.Run()
+	if err != nil {
+		panic(err)
+	}
 
 	endTime := time.Now()
 	systemOut.Printf("Completed [%s] at %s after %s\n", cc.Name, endTime.Format(time.Kitchen), endTime.Sub(startTime))
