@@ -4,5 +4,5 @@ devcontainer:
 env:
   EXAMPLE: value
 commands:
-  test:
-    echo test, args = $@
+  shell:
+    bash

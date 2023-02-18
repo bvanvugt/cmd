@@ -12,7 +12,7 @@ import (
 	"strings"
 	"syscall"
 	"time"
-	// External deps
+
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -24,6 +24,11 @@ var fs embed.FS
 var devContainerCmd string
 
 var systemOut, systemErr *color.Color
+
+func init() {
+	systemOut = color.New(color.FgHiBlack)
+	systemErr = color.New(color.FgHiRed)
+}
 
 type CmdConfig struct {
 	DevContainerName string
@@ -72,11 +77,6 @@ func (cc *CmdCommand) Run(_ *cobra.Command, args []string) {
 	systemOut.Printf("Completed [%s] at %s after %s\n", cc.Name, endTime.Format(time.Kitchen), endTime.Sub(startTime))
 }
 
-func init() {
-	systemOut = color.New(color.FgHiBlack)
-	systemErr = color.New(color.FgHiRed)
-}
-
 func writeFile(srcPath string, dstPath string) {
 	if _, err := os.Stat(dstPath); err == nil {
 		systemErr.Printf("File %s already exists\n", dstPath)
@@ -110,6 +110,13 @@ func main() {
 			writeFile("files/.cmd.yaml", ".cmd.yaml")
 		},
 	}
+	initCmd.AddCommand(&cobra.Command{
+		Use: "go",
+		Run: func(cmd *cobra.Command, args []string) {
+			_ = os.Mkdir(".devcontainer", os.ModePerm)
+			writeFile("files/devcontainer.go.json", ".devcontainer/devcontainer.json")
+		},
+	})
 
 	devCmd := &cobra.Command{
 		Use: "dev",

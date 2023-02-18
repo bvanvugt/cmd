@@ -1,0 +1,26 @@
+{
+    // "name": "x.y.local",
+    "image": "golang:1.20",
+    "runArgs": [
+        "--rm",
+        // "--name=x.y.local"
+        // "--network=x.y.local",
+        // "--env-file=.devcontainer/devcontainer.env",
+    ],
+    "forwardPorts": [],
+    "shutdownAction": "none",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "golang.go"
+            ],
+            "settings": {
+                "editor.formatOnSave": true,
+                "go.formatTool": "gofmt",
+                "go.testOnSave": true,
+                "go.coverOnSave": true,
+                "go.coverageOptions": "showUncoveredCodeOnly"
+            }
+        }
+    }
+}
