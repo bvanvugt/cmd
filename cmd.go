@@ -100,7 +100,7 @@ func main() {
 			systemErr.Println("cmd.yaml: devcontainer.name not specified")
 		}
 
-		args := []string{"exec", "-i"}
+		args := []string{"exec", "-it"}
 		if len(config.DevContainerDir) > 0 {
 			args = append(args, "-w", config.DevContainerDir)
 		}
@@ -122,6 +122,7 @@ func main() {
 		}
 
 	}
+	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
@@ -140,7 +141,7 @@ func main() {
 	// Run it
 	startTime := time.Now()
 	systemOut.Printf("Running [%s] at %s\n", cmdArg, startTime.Format(time.Kitchen))
-	systemOut.Println(cmd.String())
+	// systemOut.Println(cmd.String())
 	err = cmd.Run()
 	if err != nil {
 		// Interrupted -- do we care?
