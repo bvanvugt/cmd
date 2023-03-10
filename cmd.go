@@ -47,7 +47,12 @@ func (cc *CmdCommand) Run(_ *cobra.Command, args []string) {
 
 	startTime := time.Now()
 
-	shellString := strings.Replace(cc.Shell, "$@", strings.Join(args, " "), 1)
+	shellString := strings.Replace(cc.Shell, "$@", strings.Join(args, " "), -1)
+	for i, arg := range args {
+		shellString = strings.Replace(shellString, fmt.Sprintf("$%d", i+1), arg, -1)
+		systemOut.Println(arg)
+	}
+
 	if len(devContainerCmd) > 0 {
 		shellString = fmt.Sprintf("%s %s", devContainerCmd, shellString)
 	}
@@ -71,6 +76,7 @@ func (cc *CmdCommand) Run(_ *cobra.Command, args []string) {
 	}()
 
 	systemOut.Printf("Running [%s] at %s\n", cc.Name, startTime.Format(time.Kitchen))
+	systemOut.Println(shellString)
 
 	err := cmd.Run()
 	if err != nil {
